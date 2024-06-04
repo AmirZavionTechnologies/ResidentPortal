@@ -2,12 +2,12 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import SignUpForm, AddRecordForm
-from .models import Record, Resident, Visitor, Guard
+from .models import Record, Resident, Visitor, Guard, Vehicle
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from knox.auth import AuthToken
-from .serializers import ResidentSerializer, VisitorSerializer, GuardSerializer
+from .serializers import ResidentSerializer, VisitorSerializer, GuardSerializer, VehicleSerializer
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -162,6 +162,26 @@ class ResidentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Return an empty queryset to prevent listing
         return Resident.objects.none()
+	
+class VehicleViewSet(viewsets.ModelViewSet):
+    queryset=Vehicle.objects.all()
+    serializer_class=VehicleSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        vehicle = serializer.save()
+
+        # Set the current user as the resident
+        vehicle.user = request.user
+        vehicle.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def get_queryset(self):
+        # Return an empty queryset to prevent listing
+        return Vehicle.objects.none()
 	
 
 class VisitorViewSet(viewsets.ModelViewSet):

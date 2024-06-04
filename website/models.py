@@ -40,6 +40,18 @@ class Visitor(models.Model):
         return f"{self.first_name} {self.last_name} - {self.visit_code}"
     
 
+class Vehicle(models.Model):
+    owner = models.ForeignKey(Resident, on_delete=models.CASCADE, related_name='vehicles')
+    vehicle_type = models.CharField(max_length=50)
+    vehicle_model = models.CharField(max_length=50)
+    car_number_plate=models.CharField(max_length=150)
+    carmodel= models.CharField(max_length=100,unique=True,null=True)  
+    entry_codes=models.UUIDField(default=uuid.uuid4, editable=False)
+    
+    def __str__(self):
+        return self.vehicle_number
+    
+
 class Guard(models.Model):
     badge_number = models.CharField(max_length=50, unique=True)
     shift_start_time = models.TimeField()
