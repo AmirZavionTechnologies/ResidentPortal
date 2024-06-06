@@ -1,7 +1,7 @@
 from django.urls import path, include
 from . import views
 from rest_framework.routers import DefaultRouter
-from .views import ResidentViewSet,VehicleViewSet, VisitorViewSet, GuardViewSet, ResidentByEntryCode, GuardSearchResidentByEntryCode
+from .views import ResidentViewSet,LoginAPI,GetUserData,VehicleViewSet,GuardSearchVehicleByEntryCode, VisitorViewSet, GuardViewSet, ResidentByEntryCode, GuardSearchResidentByEntryCode
 
 router = DefaultRouter()
 router.register(r'residents', ResidentViewSet)
@@ -20,8 +20,9 @@ urlpatterns = [
     path('delete_record/<int:pk>', views.delete_record, name='delete_record'),
     path('add_record/', views.add_record, name='add_record'),
     path('update_record/<int:pk>', views.update_record, name='update_record'),
-    path('login/',views.login_api),
-    path('user/',views.get_user_data),
+    path('api/login/', LoginAPI.as_view(), name='login_api'),
+    path('api/user/',GetUserData.as_view()),
     path('resident/<str:entry_code>/', ResidentByEntryCode.as_view(), name='resident-by-apartment-number'),
     path('guards/search-resident/<str:entry_code>/', GuardSearchResidentByEntryCode.as_view(), name='guard-search-resident'),
+    path('guards/search-vehicle/<str:entry_codes>/', GuardSearchVehicleByEntryCode.as_view(), name='guard-search-resident'),
 ]

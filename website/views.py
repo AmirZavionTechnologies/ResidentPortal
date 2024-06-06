@@ -11,7 +11,7 @@ from .serializers import ResidentSerializer, VisitorSerializer, GuardSerializer,
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
-
+from rest_framework.authentication import TokenAuthentication
 
 
 
@@ -113,35 +113,36 @@ def update_record(request, pk):
 
 
 ####Token Authentication ####
-@api_view(['POST'])
-def login_api(request):
-    serializer=AuthTokenSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user=serializer.validated_data['user']
-    created, token=AuthToken.objects.create(user)
-    _, token = AuthToken.objects.create(user)
-    return Response({
-        'user_info': {
-        'id':user.id,
-        'username':user.username,
-        'email':user.email
-        },
-    'token':token
-    })
-
-@api_view(['GET'])
-def get_user_data(request):
-    user = request.user
-
-    if user.is_authenticated:
+class LoginAPI(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = AuthTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        _, token = AuthToken.objects.create(user)
+        
         return Response({
             'user_info': {
-            'id':user.id,
-            'username':user.username,
-            'email':user.email
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
             },
-        })
-    return Response({'error':'not authenticated'},status=400)
+            'token': token
+        }, status=status.HTTP_200_OK)
+
+class GetUserData(APIView):
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+
+        if user.is_authenticated:
+            return Response({
+                'user_info': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email
+                },
+            })
+        return Response({'error': 'not authenticated'}, status=400)
 
 class ResidentViewSet(viewsets.ModelViewSet):
     queryset = Resident.objects.all()
@@ -214,3 +215,14 @@ class GuardSearchResidentByEntryCode(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Resident.DoesNotExist:
             return Response({'message': 'Resident not found'}, status=status.HTTP_404_NOT_FOUND)
+		
+class GuardSearchVehicleByEntryCode(APIView):
+
+    def get(self, request, entry_codes):
+        try:
+            vehicle = Vehicle.objects.get(entry_codes=entry_codes)
+            serializer = VehicleSerializer(vehicle)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Vehicle.DoesNotExist:
+            return Response({'message': 'Vehicle not found'}, status=status.HTTP_404_NOT_FOUND)
+    
